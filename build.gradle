@@ -1,0 +1,35 @@
+group 'scalability-rest'
+version '1.0-SNAPSHOT'
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.4.0.RELEASE")
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'jacoco'
+apply plugin: 'spring-boot'
+
+sourceCompatibility = 1.5
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile("org.springframework.boot:spring-boot-starter-web")
+//    compile("org.springframework.boot:spring-boot-starter-data-cassandra")
+//    compile("com.datastax.cassandra:cassandra-driver-core")
+    compile("org.projectlombok:lombok:1.16.4")
+
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.0'
+}
