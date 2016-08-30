@@ -1,4 +1,4 @@
-package br.edu.scalability.bmfbovespa;
+package br.edu.scalability;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
