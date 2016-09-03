@@ -2,6 +2,7 @@ package br.edu.scalability.subsidy.socialsecurity;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,17 +26,14 @@ import com.datastax.driver.core.Session;
 @RequestMapping("/socialprogram")
 public class SocialProgramController {
 
-	// @Autowired
+	@Autowired
+	private Session session;
+	// private Cluster cluster;
 	// private CqlOperations template;
 
 	@RequestMapping(value = "/small/name/{name}")
 	public List<SocialProgram> findByName(@PathVariable String name) {
-
-		String ipCluster = "127.0.0.1";
-		Cluster cluster = Cluster.builder().addContactPoint(ipCluster).build();
-		Session session = cluster.connect("scalability");
-		//
-		String cql = "select * from SocialProgramSmall where name like '" + name + "'";
+		String cql = "select * from scalability.bfs where name like '" + name + "'";
 		ResultSet results = session.execute(cql);
 		for (Row row : results) {
 			final String data = row.getString("dataOrigem");
@@ -43,9 +41,7 @@ public class SocialProgramController {
 			final String municipio = row.getString("municipio");
 			System.out.format("%s %s %s\n", data, setor, municipio);
 		}
-		cluster.close();
 		return null;
-		// return template.queryForList(cql, SocialProgram.class);
 	}
 
 	@RequestMapping("/small/city/{city}")
