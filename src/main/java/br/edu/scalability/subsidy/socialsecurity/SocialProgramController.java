@@ -7,7 +7,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.BoundStatement;
+import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
@@ -33,12 +34,14 @@ public class SocialProgramController {
 
 	@RequestMapping(value = "/small/name/{name}")
 	public List<SocialProgram> findByName(@PathVariable String name) {
-		String cql = "select * from scalability.bfs where name like '" + name + "'";
-		ResultSet results = session.execute(cql);
+		String cql = "select * from scalability.bfs where nome_beneficiario = ?";
+		PreparedStatement pstmt = session.prepare(cql);
+		BoundStatement bstmt = pstmt.bind(name);
+		ResultSet results = session.execute(bstmt);
 		for (Row row : results) {
-			final String data = row.getString("dataOrigem");
-			final String setor = row.getString("setor");
-			final String municipio = row.getString("municipio");
+			final String data = row.getString(0);
+			final String setor = row.getString(1);
+			final String municipio = row.getString(2);
 			System.out.format("%s %s %s\n", data, setor, municipio);
 		}
 		return null;
@@ -46,7 +49,16 @@ public class SocialProgramController {
 
 	@RequestMapping("/small/city/{city}")
 	public List<SocialProgram> findByCity(@PathVariable String city) {
-		String cql = "select * from SocialProgram where city = '" + city + "'";
+		String cql = "select * from scalability.bfs where nome_municipio = ?";
+		PreparedStatement pstmt = session.prepare(cql);
+		BoundStatement bstmt = pstmt.bind(city);
+		ResultSet results = session.execute(bstmt);
+		for (Row row : results) {
+			final String data = row.getString(0);
+			final String setor = row.getString(1);
+			final String municipio = row.getString(2);
+			System.out.format("%s %s %s\n", data, setor, municipio);
+		}
 		return null;
 	}
 
