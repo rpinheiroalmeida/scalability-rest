@@ -22,7 +22,7 @@ public class InsertBulkBolsaFamilia {
 
 	public static void main(String[] args) throws IOException {
 		String arquivo = "/home/marco/dados/bolsa-familia/entrada/201505_BolsaFamiliaFolhaPagamento.csv";
-		String saida = "/home/marco/temp/dados-bfs";
+		String saida = "/home/marco/temp/scalability/bfs";
 		File fSaida = new File(saida);
 		FileUtils.deleteDirectory(fSaida);
 		fSaida.mkdirs();
@@ -34,7 +34,7 @@ public class InsertBulkBolsaFamilia {
 		CQLSSTableWriter.Builder builder = CQLSSTableWriter.builder();
 		String INSERT_STMT = "INSERT INTO scalability.bfs (ID," + "UF," + "CODIGO_MUNICIPIO," + "NOME_MUNICIPIO,"
 				+ "NOME_BENEFICIARIO," + "VALOR_PAGO," + "MES_ANO)" + "VALUES (?, ?, ?, ?, ?, ?, ?)";
-		String CREATE_TABLE = "CREATE TABLE SCALABILITY.BFS (ID TIMEUUID, UF TEXT, CODIGO_MUNICIPIO TEXT, NOME_MUNICIPIO TEXT, NOME_BENEFICIARIO TEXT, VALOR_PAGO FLOAT, MES_ANO TEXT, PRIMARY KEY (ID, NOME_MUNICIPIO));";
+		String CREATE_TABLE = "CREATE TABLE SCALABILITY.BFS (ID UUID, UF TEXT, CODIGO_MUNICIPIO TEXT, NOME_MUNICIPIO TEXT, NOME_BENEFICIARIO TEXT, VALOR_PAGO FLOAT, MES_ANO TEXT, PRIMARY KEY (ID, NOME_MUNICIPIO));";
 		builder.inDirectory(outputDir).forTable(CREATE_TABLE).using(INSERT_STMT)
 				.withPartitioner(new Murmur3Partitioner());
 		CQLSSTableWriter writer = builder.build();
@@ -48,11 +48,11 @@ public class InsertBulkBolsaFamilia {
 			while ((line = reader.readLine()) != null) {
 				List<String> colunas = Arrays.asList(line.split("\t"));
 
-				if (i % 100000 == 0 && i > 0) {
+				if (i % 1000000 == 0 && i > 0) {
 					logger.info("Parcial: " + i);
 				}
 				float valor = Float.parseFloat(colunas.get(10).replaceAll(",", "").replaceAll("\\.00", ""));
-				writer.addRow(UUIDs.timeBased(), colunas.get(0), colunas.get(1), colunas.get(2), colunas.get(8), valor,
+				writer.addRow(UUIDs.random(), colunas.get(0), colunas.get(1), colunas.get(2), colunas.get(8), valor,
 						colunas.get(11));
 				i++;
 			}

@@ -13,7 +13,7 @@ CREATE TABLE BFS (ID TIMEUUID,
                  PRIMARY KEY (ID, NOME_MUNICIPIO));
                  
                  
-CREATE TABLE BFS (ID TIMEUUID,
+CREATE TABLE SCALABILITY.BFS (ID TIMEUUID,
                  UF TEXT,
                  CODIGO_MUNICIPIO TEXT,
                  NOME_MUNICIPIO TEXT,
