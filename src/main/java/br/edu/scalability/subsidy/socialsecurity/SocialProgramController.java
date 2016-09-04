@@ -1,5 +1,6 @@
 package br.edu.scalability.subsidy.socialsecurity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,8 +16,8 @@ import com.datastax.driver.core.Session;
 
 /**
  * 
- * @author marco Aug 30, 2016 Usar a doc:
- *         https://github.com/spring-projects/spring-data-cassandra<br />
+ * @author marco Aug 30, 2016<br/>
+ *         - Pesquisa por nis do beneficiário;<br />
  *         - Pesquisa por nome do beneficiário;<br />
  *         - Pesquisa por cidade;<br />
  *         - Maior valor pago;<br />
@@ -32,19 +33,19 @@ public class SocialProgramController {
 	// private Cluster cluster;
 	// private CqlOperations template;
 
-	@RequestMapping(value = "/small/name/{name}")
-	public List<SocialProgram> findByName(@PathVariable String name) {
-		String cql = "select * from scalability.bfs where nome_beneficiario = ?";
+	@RequestMapping(value = "/small/number/{number}")
+	public List<SocialProgram> findByName(@PathVariable String number) {
+		String cql = "select * from scalability.bfs where nis_beneficiario = ?";
 		PreparedStatement pstmt = session.prepare(cql);
-		BoundStatement bstmt = pstmt.bind(name);
+		BoundStatement bstmt = pstmt.bind(number);
 		ResultSet results = session.execute(bstmt);
+		List<SocialProgram> lista = new ArrayList<SocialProgram>();
 		for (Row row : results) {
-			final String data = row.getString(0);
-			final String setor = row.getString(1);
-			final String municipio = row.getString(2);
-			System.out.format("%s %s %s\n", data, setor, municipio);
+			SocialProgram s = new SocialProgram(row.getString("uf"), row.getString(""), row.getString(""),
+					row.getString(""), row.getString(""), row.getString(""), row.getString(""));
+			lista.add(s);
 		}
-		return null;
+		return lista;
 	}
 
 	@RequestMapping("/small/city/{city}")

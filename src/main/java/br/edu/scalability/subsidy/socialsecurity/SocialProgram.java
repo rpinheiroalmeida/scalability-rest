@@ -14,6 +14,7 @@ public class SocialProgram {
 	public String state;
 	public String cityCode;
 	public String cityName;
+	public String beneficiaryNumber;
 	public String beneficiaryName;
 	public String value;
 	public String yearMonth;

@@ -21,30 +21,36 @@ public class InsertBulkBolsaFamilia {
 	private static Logger logger = Logger.getLogger(InsertBulkBolsaFamilia.class);
 
 	public static void main(String[] args) throws IOException {
-		String arquivo = "/home/marco/dados/bolsa-familia/entrada/201505_BolsaFamiliaFolhaPagamento.csv";
-		String saida = "/home/marco/temp/scalability/bfs";
+		String arquivo = "/home/marco/dados/executivo/entrada/201511_BolsaFamiliaFolhaPagamento.csv";
+		String pk = "nis_beneficiario, id";
+		String table = "bfsnis";
+		String keyspace = "scalability";
+		String saida = "/home/marco/temp/" + keyspace + "/" + table;
 		File fSaida = new File(saida);
 		FileUtils.deleteDirectory(fSaida);
 		fSaida.mkdirs();
-		new InsertBulkBolsaFamilia().inserir(arquivo, saida);
+		new InsertBulkBolsaFamilia().inserir(arquivo, saida, keyspace, table, pk);
 	}
 
-	public void inserir(String filename, String outputDir) throws IOException {
+	public void inserir(String filename, String outputDir, String keyspace, String table, String pk)
+			throws IOException {
 		Config.setClientMode(true);
 		CQLSSTableWriter.Builder builder = CQLSSTableWriter.builder();
-		String INSERT_STMT = "INSERT INTO scalability.bfs (ID," + "UF," + "CODIGO_MUNICIPIO," + "NOME_MUNICIPIO,"
-				+ "NOME_BENEFICIARIO," + "VALOR_PAGO," + "MES_ANO)" + "VALUES (?, ?, ?, ?, ?, ?, ?)";
-		String CREATE_TABLE = "CREATE TABLE SCALABILITY.BFS (ID UUID, UF TEXT, CODIGO_MUNICIPIO TEXT, NOME_MUNICIPIO TEXT, NOME_BENEFICIARIO TEXT, VALOR_PAGO FLOAT, MES_ANO TEXT, PRIMARY KEY (ID, NOME_MUNICIPIO));";
-		builder.inDirectory(outputDir).forTable(CREATE_TABLE).using(INSERT_STMT)
+		String INSERT_STMT = "INSERT INTO %s.%s (ID,UF,CODIGO_MUNICIPIO,NOME_MUNICIPIO,NIS_BENEFICIARIO,NOME_BENEFICIARIO,VALOR_PAGO,MES_ANO)"
+				+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+		String CREATE_TABLE = "CREATE TABLE %s.%s (ID TIMEUUID, UF TEXT, CODIGO_MUNICIPIO TEXT, NOME_MUNICIPIO TEXT, NIS_BENEFICIARIO TEXT, NOME_BENEFICIARIO TEXT, VALOR_PAGO FLOAT, MES_ANO TEXT, PRIMARY KEY (%s));";
+		String formatedCreateTable = String.format(CREATE_TABLE, keyspace, table, pk);
+		logger.info("Create: " + formatedCreateTable);
+		builder.inDirectory(outputDir).forTable(formatedCreateTable).using(String.format(INSERT_STMT, keyspace, table))
 				.withPartitioner(new Murmur3Partitioner());
 		CQLSSTableWriter writer = builder.build();
 
 		try (BufferedReader reader = new BufferedReader(
 				new InputStreamReader(new FileInputStream(filename), Charset.forName("ISO-8859-1")))) {
 
-			reader.readLine(); // IGNORA O HEADER
-			String line;
 			int i = 0;
+			reader.readLine();
+			String line;
 			while ((line = reader.readLine()) != null) {
 				List<String> colunas = Arrays.asList(line.split("\t"));
 
@@ -52,14 +58,14 @@ public class InsertBulkBolsaFamilia {
 					logger.info("Parcial: " + i);
 				}
 				float valor = Float.parseFloat(colunas.get(10).replaceAll(",", "").replaceAll("\\.00", ""));
-				writer.addRow(UUIDs.random(), colunas.get(0), colunas.get(1), colunas.get(2), colunas.get(8), valor,
-						colunas.get(11));
+				writer.addRow(UUIDs.timeBased(), colunas.get(0), colunas.get(1), colunas.get(2), colunas.get(7),
+						colunas.get(8), valor, colunas.get(11));
 				i++;
 			}
+			logger.info("It's over. Total inserted: " + i);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		logger.info("Acabou");
 		writer.close();
 	}
 }
