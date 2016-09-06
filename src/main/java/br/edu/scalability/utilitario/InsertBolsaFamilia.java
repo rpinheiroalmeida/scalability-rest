@@ -24,7 +24,7 @@ public class InsertBolsaFamilia {
 	private String contactPoints = "kenobi";
 	private int port = 9042;
 
-	public static void main(String[] args) {
+	public static void main1(String[] args) {
 		String filename = "/home/marco/dados/bolsa-familia/entrada/201505_BolsaFamiliaFolhaPagamento.csv";
 		new InsertBolsaFamilia().inserir(filename);
 	}

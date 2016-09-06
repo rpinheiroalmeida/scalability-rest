@@ -20,7 +20,7 @@ import com.datastax.driver.core.utils.UUIDs;
 public class InsertBulkBolsaFamilia {
 	private static Logger logger = Logger.getLogger(InsertBulkBolsaFamilia.class);
 
-	public static void main(String[] args) throws IOException {
+	public static void main1(String[] args) throws IOException {
 		String arquivo = args[0]; // "/home/marco/dados/executivo/entrada/201511_BolsaFamiliaFolhaPagamento.csv";
 		String pk = args[1]; // "nis_beneficiario, id";
 		String table = args[2];// "bfsnis";
