@@ -21,11 +21,12 @@ public class InsertBulkBolsaFamilia {
 	private static Logger logger = Logger.getLogger(InsertBulkBolsaFamilia.class);
 
 	public static void main(String[] args) throws IOException {
-		String arquivo = "/home/marco/dados/executivo/entrada/201511_BolsaFamiliaFolhaPagamento.csv";
-		String pk = "nis_beneficiario, id";
-		String table = "bfsnis";
-		String keyspace = "scalability";
-		String saida = "/home/marco/temp/" + keyspace + "/" + table;
+		String arquivo = args[0]; // "/home/marco/dados/executivo/entrada/201511_BolsaFamiliaFolhaPagamento.csv";
+		String pk = args[1]; // "nis_beneficiario, id";
+		String table = args[2];// "bfsnis";
+		String keyspace = args[3]; // "scalability";
+		String saida = System.getProperty("user.home") + "/" + keyspace + "/" + table;
+		//
 		File fSaida = new File(saida);
 		FileUtils.deleteDirectory(fSaida);
 		fSaida.mkdirs();

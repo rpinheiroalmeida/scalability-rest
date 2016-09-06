@@ -37,3 +37,14 @@ dependencies {
 task wrapper(type: Wrapper) {
     gradleVersion = '3.0'
 }
+
+task fatJar(type: Jar) {
+	manifest {
+        attributes 'Implementation-Title': 'Gradle Jar File Example',
+        	'Implementation-Version': version,
+        	'Main-Class': 'br.edu.scalability.Application'
+    }
+    baseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
