@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.datastax.driver.core.BoundStatement;
+import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
@@ -33,24 +34,33 @@ public class SocialProgramController {
 	// private Cluster cluster;
 	// private CqlOperations template;
 
+	private PreparedStatement pstmtFindByNameSmall;
+
 	@RequestMapping(value = "/small/number/{number}")
 	public List<SocialProgram> findByName(@PathVariable String number) {
-		String cql = "select * from scalability.bfs where nis_beneficiario = ?";
-		PreparedStatement pstmt = session.prepare(cql);
-		BoundStatement bstmt = pstmt.bind(number);
+		String cql = "select * from scalability.bfsnis where nis_beneficiario = ?";
+		// Session session = cluster.connect();
+		if (pstmtFindByNameSmall == null) {
+			pstmtFindByNameSmall = session.prepare(cql);
+		}
+		BoundStatement bstmt = pstmtFindByNameSmall.bind(number);
 		ResultSet results = session.execute(bstmt);
 		List<SocialProgram> lista = new ArrayList<SocialProgram>();
 		for (Row row : results) {
-			SocialProgram s = new SocialProgram(row.getString("uf"), row.getString(""), row.getString(""),
-					row.getString(""), row.getString(""), row.getString(""), row.getString(""));
+			SocialProgram s = new SocialProgram(row.getString("uf"), row.getString("codigo_municipio"),
+					row.getString("nome_municipio"), row.getString("nis_beneficiario"),
+					row.getString("nome_beneficiario"), String.valueOf(row.getFloat("valor_pago")),
+					row.getString("mes_ano"));
 			lista.add(s);
 		}
+		// session.close();
 		return lista;
 	}
 
 	@RequestMapping("/small/city/{city}")
 	public List<SocialProgram> findByCity(@PathVariable String city) {
-		String cql = "select * from scalability.bfs where nome_municipio = ?";
+		String cql = "select * from scalability.bfscity where nome_municipio = ?";
+		// Session session = cluster.connect();
 		PreparedStatement pstmt = session.prepare(cql);
 		BoundStatement bstmt = pstmt.bind(city);
 		ResultSet results = session.execute(bstmt);
@@ -60,6 +70,7 @@ public class SocialProgramController {
 			final String municipio = row.getString(2);
 			System.out.format("%s %s %s\n", data, setor, municipio);
 		}
+		// session.close();
 		return null;
 	}
 
