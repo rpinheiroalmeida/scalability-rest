@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.datastax.driver.core.BoundStatement;
-import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
@@ -35,6 +34,8 @@ public class SocialProgramController {
 	// private CqlOperations template;
 
 	private PreparedStatement pstmtFindByNameSmall;
+	private PreparedStatement pstmtFindByCityCode;
+	private PreparedStatement pstmtFindByCityName;
 
 	@RequestMapping(value = "/small/number/{number}")
 	public List<SocialProgram> findByName(@PathVariable String number) {
@@ -47,31 +48,50 @@ public class SocialProgramController {
 		ResultSet results = session.execute(bstmt);
 		List<SocialProgram> lista = new ArrayList<SocialProgram>();
 		for (Row row : results) {
-			SocialProgram s = new SocialProgram(row.getString("uf"), row.getString("codigo_municipio"),
-					row.getString("nome_municipio"), row.getString("nis_beneficiario"),
-					row.getString("nome_beneficiario"), String.valueOf(row.getFloat("valor_pago")),
-					row.getString("mes_ano"));
+			SocialProgram s = preencherVO(row);
 			lista.add(s);
 		}
 		// session.close();
 		return lista;
 	}
 
-	@RequestMapping("/small/city/{city}")
-	public List<SocialProgram> findByCity(@PathVariable String city) {
+	@RequestMapping("/small/citycode/{city}")
+	public List<SocialProgram> findByCityCode(@PathVariable String city) {
+		String cql = "select * from scalability.bfscity where codigo_municipio = ?";
+		// Session session = cluster.connect();
+		if (pstmtFindByCityCode == null)
+			pstmtFindByCityCode = session.prepare(cql);
+		BoundStatement bstmt = pstmtFindByCityCode.bind(city.trim());
+		ResultSet results = session.execute(bstmt);
+		List<SocialProgram> lista = new ArrayList<SocialProgram>();
+		for (Row row : results) {
+			SocialProgram s = preencherVO(row);
+			lista.add(s);
+		}
+		return lista;
+	}
+
+	@RequestMapping("/small/cityname/{city}")
+	public List<SocialProgram> findByCityName(@PathVariable String city) {
 		String cql = "select * from scalability.bfscity where nome_municipio = ?";
 		// Session session = cluster.connect();
-		PreparedStatement pstmt = session.prepare(cql);
-		BoundStatement bstmt = pstmt.bind(city);
+		if (pstmtFindByCityName == null)
+			pstmtFindByCityName = session.prepare(cql);
+		BoundStatement bstmt = pstmtFindByCityName.bind(city.trim());
 		ResultSet results = session.execute(bstmt);
+		List<SocialProgram> lista = new ArrayList<SocialProgram>();
 		for (Row row : results) {
-			final String data = row.getString(0);
-			final String setor = row.getString(1);
-			final String municipio = row.getString(2);
-			System.out.format("%s %s %s\n", data, setor, municipio);
+			SocialProgram s = preencherVO(row);
+			lista.add(s);
 		}
-		// session.close();
-		return null;
+		return lista;
+	}
+
+	private SocialProgram preencherVO(Row row) {
+		SocialProgram s = new SocialProgram(row.getString("uf"), row.getString("codigo_municipio"),
+				row.getString("nome_municipio"), row.getString("nis_beneficiario"), row.getString("nome_beneficiario"),
+				String.valueOf(row.getFloat("valor_pago")), row.getString("mes_ano"));
+		return s;
 	}
 
 	@RequestMapping("/small/biggervalue/{city}")
