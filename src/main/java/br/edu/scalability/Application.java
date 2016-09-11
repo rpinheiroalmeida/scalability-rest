@@ -18,6 +18,8 @@ public class Application {
 	private Session session;
 	private Cluster cluster;
 	private String contactPoints = System.getProperty("servidor.cassandra");
+	private String user = System.getProperty("usuario.cassandra");
+	private String pwd = System.getProperty("senha.cassandra");
 	private int port = 9042;
 
 	public static void main(String[] args) {
@@ -36,7 +38,8 @@ public class Application {
 	@Bean(destroyMethod = "close")
 	public Cluster cluster() throws Exception {
 		if (cluster == null) {
-			cluster = Cluster.builder().addContactPoints(contactPoints).withPort(port).build();
+			cluster = Cluster.builder().addContactPoints(contactPoints).withPort(port).withCredentials(user, pwd)
+					.build();
 			logger.info("Build cluster");
 		}
 		return cluster;
