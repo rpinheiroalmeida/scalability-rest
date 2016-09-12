@@ -34,7 +34,6 @@ public class SocialProgramController {
 	// private CqlOperations template;
 
 	private PreparedStatement pstmtFindByNameSmall;
-	private PreparedStatement pstmtFindByCityCode;
 	private PreparedStatement pstmtFindByCityName;
 	private PreparedStatement pstmtFindBiggestByCityStateMonth;
 	private PreparedStatement pstmtFindSmallestByCityStateMonth;
@@ -43,45 +42,39 @@ public class SocialProgramController {
 	@RequestMapping(value = "/small/number/{number}")
 	public List<SocialProgram> findByName(@PathVariable String number) {
 		String cql = "select * from scalability.bfsnis where nis_beneficiario = ?";
-		// Session session = cluster.connect();
 		if (pstmtFindByNameSmall == null) {
 			pstmtFindByNameSmall = session.prepare(cql);
 		}
 		BoundStatement bstmt = pstmtFindByNameSmall.bind(number);
 		ResultSet results = session.execute(bstmt);
-		List<SocialProgram> lista = new ArrayList<SocialProgram>();
-		for (Row row : results) {
-			SocialProgram s = preencherVO(row);
-			lista.add(s);
-		}
-		// session.close();
+		List<SocialProgram> lista = criarLista(results);
 		return lista;
 	}
 
-	@RequestMapping("/small/citycode/{city}")
-	public List<SocialProgram> findByCityCode(@PathVariable String city) {
-		String cql = "select * from scalability.bfscity where codigo_municipio = ?";
-		// Session session = cluster.connect();
-		if (pstmtFindByCityCode == null)
-			pstmtFindByCityCode = session.prepare(cql);
-		BoundStatement bstmt = pstmtFindByCityCode.bind(city.trim());
+	@RequestMapping("/small/cityname/{city}/{state}/{month}/{year}")
+	public List<SocialProgram> findByCityName(@PathVariable String city, @PathVariable String state,
+			@PathVariable String month, @PathVariable String year) {
+		String cql = "select * from scalability.bfsvalue where nome_municipio = ? " + "and uf = ? and mes_ano = ? ";
+		if (pstmtFindByCityName == null)
+			pstmtFindByCityName = session.prepare(cql);
+		BoundStatement bstmt = pstmtFindByCityName.bind(city.trim(), state, month + "/" + year);
 		ResultSet results = session.execute(bstmt);
-		List<SocialProgram> lista = new ArrayList<SocialProgram>();
-		for (Row row : results) {
-			SocialProgram s = preencherVO(row);
-			lista.add(s);
-		}
+		List<SocialProgram> lista = criarLista(results);
 		return lista;
 	}
 
 	@RequestMapping("/small/cityname/{city}")
 	public List<SocialProgram> findByCityName(@PathVariable String city) {
 		String cql = "select * from scalability.bfscity where nome_municipio = ?";
-		// Session session = cluster.connect();
 		if (pstmtFindByCityName == null)
 			pstmtFindByCityName = session.prepare(cql);
 		BoundStatement bstmt = pstmtFindByCityName.bind(city.trim());
 		ResultSet results = session.execute(bstmt);
+		List<SocialProgram> lista = criarLista(results);
+		return lista;
+	}
+
+	private List<SocialProgram> criarLista(ResultSet results) {
 		List<SocialProgram> lista = new ArrayList<SocialProgram>();
 		for (Row row : results) {
 			SocialProgram s = preencherVO(row);
@@ -100,38 +93,72 @@ public class SocialProgramController {
 	@RequestMapping("/small/biggestvalue/{city}/{state}/{month}/{year}")
 	public Float findBiggestByCityStateMonth(@PathVariable String city, @PathVariable String state,
 			@PathVariable String month, @PathVariable String year) {
-		String cql = "select valor_pago as biggest from scalability.bfsvalue "
-				+ "where nome_municipio = ? and uf = ? and mes_ano = ? order by valor_pago desc limit 1 ";
+		String cql = "select * from scalability.bfsvalue where nome_municipio = ? and uf = ? and mes_ano = ? ";
 		if (pstmtFindBiggestByCityStateMonth == null) {
 			pstmtFindBiggestByCityStateMonth = session.prepare(cql);
 		}
 		BoundStatement bstmt = pstmtFindBiggestByCityStateMonth.bind(city.trim(), state, month + "/" + year);
 		ResultSet results = session.execute(bstmt);
-		return results.one().getFloat("biggest");
+		List<SocialProgram> lista = criarLista(results);
+		float maiorValor = 0;
+		for (SocialProgram p : lista) {
+			float valor = Float.parseFloat(p.getValue());
+			if (valor >= maiorValor) {
+				maiorValor = valor;
+			}
+		}
+		return maiorValor;
 	}
 
 	@RequestMapping("/small/smallestvalue/{city}/{state}/{month}/{year}")
 	public Float findSmallestByCityStateMonth(@PathVariable String city, @PathVariable String state,
 			@PathVariable String month, @PathVariable String year) {
-		String cql = "select valor_pago as smallest from scalability.bfsvalue where nome_municipio = ? and uf = ? and mes_ano = ? limit 1";
+		// String cql = "select valor_pago as smallest from scalability.bfsvalue
+		// where nome_municipio = ? and uf = ? and mes_ano = ? limit 1";
+		String cql = "select * from scalability.bfsvalue where nome_municipio = ? and uf = ? and mes_ano = ?";
 		if (pstmtFindSmallestByCityStateMonth == null) {
 			pstmtFindSmallestByCityStateMonth = session.prepare(cql);
 		}
 		BoundStatement bstmt = pstmtFindSmallestByCityStateMonth.bind(city.trim(), state, month + "/" + year);
 		ResultSet results = session.execute(bstmt);
-		return results.one().getFloat("smallest");
+		List<SocialProgram> lista = criarLista(results);
+		float menorValor = 0;
+		int i = 0;
+		for (SocialProgram p : lista) {
+			float valor = Float.parseFloat(p.getValue());
+			if (i == 0) {
+				menorValor = valor;
+			}
+			if (valor <= menorValor) {
+				menorValor = valor;
+			}
+			i++;
+		}
+		return menorValor;
+		// return results.one().getFloat("smallest");
 	}
 
 	@RequestMapping("/small/averagevalue/{city}/{state}/{month}/{year}")
 	public Float findAverageByCity(@PathVariable String city, @PathVariable String state, @PathVariable String month,
 			@PathVariable String year) {
-		String cql = "select avg(valor_pago) as average from scalability.bfsvalue where nome_municipio = ? and uf = ? and mes_ano = ? ";
+		String cql = "select * from scalability.bfsvalue " + "where nome_municipio = ? and uf = ? and mes_ano = ? ";
+		// String cql = "select avg(valor_pago) as average from
+		// scalability.bfsvalue where nome_municipio = ? and uf = ? and mes_ano
+		// = ? ";
 		if (pstmtFindAverageByCityStateMonth == null) {
 			pstmtFindAverageByCityStateMonth = session.prepare(cql);
 		}
 		BoundStatement bstmt = pstmtFindAverageByCityStateMonth.bind(city.trim(), state, month + "/" + year);
 		ResultSet results = session.execute(bstmt);
-		return results.one().getFloat("average");
+		List<SocialProgram> lista = criarLista(results);
+		float valorTotal = 0;
+		int total = 0;
+		for (SocialProgram p : lista) {
+			valorTotal += Float.parseFloat(p.getValue());
+			total++;
+		}
+		// return results.one().getFloat("average");
+		return valorTotal / total;
 	}
 
 }
