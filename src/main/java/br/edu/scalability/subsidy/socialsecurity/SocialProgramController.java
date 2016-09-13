@@ -43,7 +43,6 @@ public class SocialProgramController {
 	@RequestMapping(value = "/small/number/{number}")
 	public List<SocialProgram> findByName(@PathVariable String number) {
 		String cql = "select * from scalability.bfsnis where nis_beneficiario = ?";
-		// Session session = cluster.connect();
 		if (pstmtFindByNameSmall == null) {
 			pstmtFindByNameSmall = session.prepare(cql);
 		}
@@ -54,14 +53,12 @@ public class SocialProgramController {
 			SocialProgram s = preencherVO(row);
 			lista.add(s);
 		}
-		// session.close();
 		return lista;
 	}
 
 	@RequestMapping("/small/citycode/{city}")
 	public List<SocialProgram> findByCityCode(@PathVariable String city) {
 		String cql = "select * from scalability.bfscity where codigo_municipio = ?";
-		// Session session = cluster.connect();
 		if (pstmtFindByCityCode == null)
 			pstmtFindByCityCode = session.prepare(cql);
 		BoundStatement bstmt = pstmtFindByCityCode.bind(city.trim());
@@ -77,7 +74,6 @@ public class SocialProgramController {
 	@RequestMapping("/small/cityname/{city}")
 	public List<SocialProgram> findByCityName(@PathVariable String city) {
 		String cql = "select * from scalability.bfscity where nome_municipio = ?";
-		// Session session = cluster.connect();
 		if (pstmtFindByCityName == null)
 			pstmtFindByCityName = session.prepare(cql);
 		BoundStatement bstmt = pstmtFindByCityName.bind(city.trim());
