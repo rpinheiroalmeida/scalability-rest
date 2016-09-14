@@ -24,6 +24,7 @@ import com.datastax.driver.core.Session;
  *         - Menor valor pago;<br />
  *         - Média dos valores pagos.<br />
  */
+
 @RestController
 @RequestMapping("/socialprogram")
 public class SocialProgramController {
@@ -35,6 +36,7 @@ public class SocialProgramController {
 
 	private PreparedStatement pstmtFindByNameSmall;
 	private PreparedStatement pstmtFindByCityName;
+	private PreparedStatement pstmtFindByCityCode;
 	private PreparedStatement pstmtFindBiggestByCityStateMonth;
 	private PreparedStatement pstmtFindSmallestByCityStateMonth;
 	private PreparedStatement pstmtFindAverageByCityStateMonth;
@@ -46,6 +48,21 @@ public class SocialProgramController {
 			pstmtFindByNameSmall = session.prepare(cql);
 		}
 		BoundStatement bstmt = pstmtFindByNameSmall.bind(number);
+		ResultSet results = session.execute(bstmt);
+		List<SocialProgram> lista = new ArrayList<SocialProgram>();
+		for (Row row : results) {
+			SocialProgram s = preencherVO(row);
+			lista.add(s);
+		}
+		return lista;
+	}
+
+	@RequestMapping("/small/citycode/{city}")
+	public List<SocialProgram> findByCityCode(@PathVariable String city) {
+		String cql = "select * from scalability.bfscity where codigo_municipio = ?";
+		if (pstmtFindByCityCode == null)
+			pstmtFindByCityCode = session.prepare(cql);
+		BoundStatement bstmt = pstmtFindByCityCode.bind(city.trim());
 		ResultSet results = session.execute(bstmt);
 		List<SocialProgram> lista = criarLista(results);
 		return lista;
