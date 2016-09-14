@@ -11,6 +11,7 @@ import com.datastax.driver.core.Session;
 /**
  * Created by rodrigopinheiro on 8/27/16.
  */
+
 @SpringBootApplication
 public class Application {
 

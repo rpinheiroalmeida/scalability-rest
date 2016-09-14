@@ -47,3 +47,14 @@ http://localhost:8080/socialprogram/small/number/00010659939255
 
 bin/sstableloader -d kenobi ~/temp/scalability/bfsnis/
 
+# Fragmentos
+task fatJar(type: Jar) {
+	manifest {
+        attributes 'Implementation-Title': 'Gradle Jar File Example',
+        	'Implementation-Version': version,
+        	'Main-Class': 'br.edu.scalability.Application'
+    }
+    baseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
